@@ -24,4 +24,6 @@ for model_repo in "${model_arr[@]}"; do
        git clone "${model_repo}"
     fi
 done
-echo "Done cloning the Model repos"
+echo "Done cloning the Model repos. Checking disk usage..."
+du -sk ./Models
+
