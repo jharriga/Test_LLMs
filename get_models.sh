@@ -12,7 +12,7 @@ if [ ! -d "./Models" ]; then
 fi
 cd Models
 
-dnf install git-lfs
+dnf install -y git-lfs
 git lfs install
 
 echo "Start cloning the Model repos"
