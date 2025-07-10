@@ -39,7 +39,7 @@ fi
 cd vllm
 podman build -f "${containerFile}" \
   --build-arg VLLM_CPU_DISABLE_AVX512="false" \
-  --tag vllm-cpu-env --target vllm-openai .
+  --tag vllm-cpu-env --target "${targetName}" .
 
 echo; echo "Build llama.cpp using 'cmake'"
 cd ../llama.cpp
