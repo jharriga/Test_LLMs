@@ -42,7 +42,7 @@ podman build -f "${containerFile}" \
   --tag vllm-cpu-env --target vllm-openai .
 
 echo; echo "Build llama.cpp using 'cmake'"
-cd llama.cpp
+cd ../llama.cpp
 cmake -B build
 cmake --build build --config Release -j $(nproc)
 
