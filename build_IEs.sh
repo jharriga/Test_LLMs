@@ -22,7 +22,20 @@ done
 echo "Done cloning the Inference Engine repos"
 
 echo "Build vLLM using 'podman build'"
-podman build -f vllm/docker/Dockerfile.cpu \
+# Determine CPU Arch to set Dockerfile
+if [[ $(arch) == "aarch64" ]]; then
+    echo "System is AArch64. Using docker/Dockerfile.arm"
+    containerFile="docker/Dockerfile.arm"
+elif [[ $(arch) == "x86_64" ]]; then
+    echo "System is x86_64. Using docker/Dockerfile.cpu"  
+    containerFile="docker/Dockerfile.cpu"
+else
+    echo "Unrecognized system: not AArch64 or x86_64. ABORTING Build"
+    exit
+fi
+
+cd vllm
+podman build -f "${containerFile}" \
   --build-arg VLLM_CPU_DISABLE_AVX512="false" \
   --tag vllm-cpu-env --target vllm-openai .
 
