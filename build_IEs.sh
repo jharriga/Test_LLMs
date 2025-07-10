@@ -22,7 +22,6 @@ done
 echo "Done cloning the Inference Engine repos"
 
 echo "Build vLLM using 'podman build'"
-cd vllm_git
 podman build -f vllm/docker/Dockerfile.cpu \
   --build-arg VLLM_CPU_DISABLE_AVX512="false" \
   --tag vllm-cpu-env --target vllm-openai .
