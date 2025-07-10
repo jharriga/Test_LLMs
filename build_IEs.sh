@@ -8,7 +8,7 @@ IErepo_arr=("https://github.com/ggml-org/llama.cpp"
 # Install necessary Tools
 # llama.cpp requires python and cmake
 # vLLM requires podman for build & run
-dnf install -y podman python3 cmake
+dnf install -y podman python3 cmake curl
 
 echo "Clone the Inference Engine repos"
 for IE_repo in "${IErepo_arr[@]}"; do
