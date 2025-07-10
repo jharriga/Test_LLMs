@@ -10,7 +10,7 @@ IErepo_arr=("https://github.com/ggml-org/llama.cpp"
 # vLLM requires podman for build & run
 dnf install -y podman python3 cmake curl libcurl-devel
 
-echo "Clone the Inference Engine repos"
+echo; echo "Clone the Inference Engine repos"
 for IE_repo in "${IErepo_arr[@]}"; do
     IE_name="$(basename "$IE_repo")"
     IE_path="$PWD/$IE_name"
@@ -21,14 +21,16 @@ for IE_repo in "${IErepo_arr[@]}"; do
 done
 echo "Done cloning the Inference Engine repos"
 
-echo "Build vLLM using 'podman build'"
+echo; echo "Build vLLM using 'podman build'"
 # Determine CPU Arch to set Dockerfile
 if [[ $(arch) == "aarch64" ]]; then
     echo "System is AArch64. Using docker/Dockerfile.arm"
     containerFile="docker/Dockerfile.arm"
+    targetName="build"
 elif [[ $(arch) == "x86_64" ]]; then
     echo "System is x86_64. Using docker/Dockerfile.cpu"  
     containerFile="docker/Dockerfile.cpu"
+    targetName="vllm-openai"
 else
     echo "Unrecognized system: not AArch64 or x86_64. ABORTING Build"
     exit
@@ -39,7 +41,7 @@ podman build -f "${containerFile}" \
   --build-arg VLLM_CPU_DISABLE_AVX512="false" \
   --tag vllm-cpu-env --target vllm-openai .
 
-echo "Build llama.cpp using 'cmake'"
+echo; echo "Build llama.cpp using 'cmake'"
 cd llama.cpp
 cmake -B build
 cmake --build build --config Release -j $(nproc)
