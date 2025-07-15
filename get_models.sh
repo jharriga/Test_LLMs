@@ -25,5 +25,6 @@ for model_repo in "${model_arr[@]}"; do
     fi
 done
 echo "Done cloning the Model repos. Checking disk usage..."
+cd ..
 du -sk "$PWD/Models"
 
