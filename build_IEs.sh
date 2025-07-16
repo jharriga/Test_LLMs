@@ -21,7 +21,7 @@ for IE_repo in "${IErepo_arr[@]}"; do
 done
 echo "Done cloning the Inference Engine repos"
 
-echo; echo "Build vLLM using 'podman build'"
+echo; echo "Build vLLM-CPU using 'podman build'"
 # Determine CPU Arch to set Dockerfile
 if [[ $(arch) == "aarch64" ]]; then
     echo "System is AArch64. Using docker/Dockerfile.arm"
@@ -38,8 +38,14 @@ fi
 
 cd vllm
 podman build -f "${containerFile}" \
-  --build-arg VLLM_CPU_DISABLE_AVX512="false" \
+  --build-arg VLLM_CPU_DISABLE_AVX512="true" \
   --tag vllm-cpu-env --target "${targetName}" .
+
+echo; echo "Build vLLM-GPU using 'podman build'"
+podman build -f docker/Dockerfile \ 
+  --build-arg RUN_WHEEL_CHECK="false" \ 
+  --tag vllm-gpu --target vllm-openai .
+
 podman images
 
 echo; echo "Build llama.cpp using 'cmake'"
