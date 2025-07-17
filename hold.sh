@@ -86,7 +86,7 @@ stopIE() {
 
 #------------------------------------------------------------------------
 # MAIN
-BMARKrepo_arr=("https://github.com/robert-mcdermott/openai-llm-benchmark.git" \
+BMARKrepo_arr=("https://github.com/robert-mcdermott/openai-llm-benchmark" \
     "https://github.com/vllm-project/guidellm")
 
 # Install necessary Tools
