@@ -8,7 +8,7 @@
 #------------------------------------------------------------------------
 # FUNCTIONS
 runBmark {
-# Execute the Benchmark/Workload
+  # Execute the Benchmark/Workload
   local the_url="$1"
   local the_model="$2"
   local the_prompt="$3"
@@ -25,7 +25,7 @@ runBmark {
 }
 
 startIE {
-# Start Inference Engine in the background
+  # Start Inference Engine in the background
   local the_IE="$1"
   local the_model="$2"
   local the_url="$3"
@@ -66,6 +66,17 @@ startIE {
   fi
 }
 
+stopIE {
+  # Stop Inference Engine background process using PGREP
+  local the_IE="$1"
+
+  pkill -f "${the_IE}"
+  if [ $? -eq 0 ]; then
+      echo "Killed ${the_IE} - IE background process"
+  else
+        echo "Unable to PKILL ${the_IE}. Exit status: $?"
+  fi
+}
 # END FUNCTIONS
 
 #------------------------------------------------------------------------
