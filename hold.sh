@@ -95,7 +95,7 @@ echo; echo "Clone the BENCHMARK Inference Engine repos"
 for BMARK_repo in "${BMARKrepo_arr[@]}"; do
     BMARK_name="$(basename "$BMARK_repo")"
     BMARK_path="$PWD/$BMARK_name"
-    if [ ! -d "$BMARK_name" ]; then
+    if [ ! -d "$BMARK_path" ]; then
        echo "Cloning $BMARK_repo"
        git clone "${BMARK_repo}">/dev/null
     fi
@@ -118,7 +118,7 @@ testPROMPT="What is the capital of Washington state in the USA?  /no_think"
 # Now get to work with TEST Loop
 url_index=0                         # used to pickup correct IE url
 for ie in "${testIE_arr[@]}"; do
-    url="{testURL_arr[url_index]}"     # get proper URL for this IE
+    url="${testURL_arr[url_index]}"     # get proper URL for this IE
     echo "Entering main TEST Loop with $ie and $url"
     for model in "${testMODELS_arr[@]}"; do
         echo "Entering inner TEST Loop with $ie & $model"
