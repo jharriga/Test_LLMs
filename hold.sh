@@ -38,14 +38,14 @@ startIE() {
     podman run --rm --privileged=true --shm-size=4g -p 8000:8000 \
       -e VLLM_CPU_KVCACHE_SPACE=40 \
       -e VLLM_CPU_OMP_THREADS_BIND=0-5 \
-      -v $PWD/Models/repos:/model \
+      -v $PWD/Models:/model \
       "${the_IE}" --model "${the_model}" \
       --block-size 16 "${IE_log}"
   elif [[ $the_IE == "vllm-gpu" ]]; then
     echo "Starting ${the_IE}"
     podman run --rm --security-opt=label=disable \
       --device=nvidia.com/gpu=all -p 8000:8000 --ipc=host \
-      -v $PWD/Models/repos:/model \
+      -v $PWD/Models:/model \
       "${the_IE}" --model "${the_model}" "${IE_log}"
   elif [[ $the_IE == "llama.cpp-CPU" ]]; then
     echo "Starting ${the_IE}"
