@@ -62,6 +62,7 @@ startIE() {
   # Trap timeout condition
   if [ $? -eq 124 ]; then
     echo "Timed out waiting for ${the_IE} to Start"
+    stopIE "${the_IE}"           # be thorough
     exit 30
   fi
 }
