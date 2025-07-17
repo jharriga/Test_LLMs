@@ -123,9 +123,9 @@ for ie in "${testIE_arr[@]}"; do
     echo "Entering main TEST Loop with $ie and $url"
     for model in "${testMODELS_arr[@]}"; do
         echo "Entering inner TEST Loop with $ie & $model"
-        startIE "${ie}" "${url}" "${model}"           # Start the Inference Engine
+        startIE "${ie}" "${model}" "${url}"           # Start the Inference Engine
         runBmark "${url}" "${model}" "${testPROMPT}"  # Run the Benchmark
-        stopIE "${ie}"                                  # Stop the Inference Engine
+        stopIE "${ie}"                                # Stop the Inference Engine
     done                  # Inner FOR Loop
     ((url_index+=1))      # increment to pickup (next) correct IE url
 done                      # Outer FOR Loop
