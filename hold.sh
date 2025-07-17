@@ -7,7 +7,7 @@
 
 #------------------------------------------------------------------------
 # FUNCTIONS
-runBmark {
+runBmark() {
   # Execute the Benchmark/Workload
   local the_url="$1"
   local the_model="$2"
@@ -24,7 +24,7 @@ runBmark {
   cd ..
 }
 
-startIE {
+startIE() {
   # Start Inference Engine in the background
   local the_IE="$1"
   local the_model="$2"
@@ -33,27 +33,27 @@ startIE {
   # Create a timestamped LOGFILE and execute as Background process
   IE_log=" > ${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").IElog 2>&1 &"
   
-  if [[ $the_IE == "vllm-CPU" ]]; then
-    echo "Starting $the_IE"
+  if [[ $the_IE == "vllm-cpu-env" ]]; then
+    echo "Starting ${the_IE}"
     podman run --rm --privileged=true --shm-size=4g -p 8000:8000 \
       -e VLLM_CPU_KVCACHE_SPACE=40 \
       -e VLLM_CPU_OMP_THREADS_BIND=0-5 \
       -v $PWD/Models/repos:/model \
       "${the_IE}" --model "${the_model}" \
       --block-size 16 "${IE_log}"
-  elif [[ $the_IE == "vllm-GPU" ]]; then
-    echo "Starting $the_IE"
+  elif [[ $the_IE == "vllm-gpu" ]]; then
+    echo "Starting ${the_IE}"
     podman run --rm --security-opt=label=disable \
       --device=nvidia.com/gpu=all -p 8000:8000 --ipc=host \
       -v $PWD/Models/repos:/model \
       "${the_IE}" --model "${the_model}" "${IE_log}"
   elif [[ $the_IE == "llama.cpp-CPU" ]]; then
-    echo "Starting $the_IE"
+    echo "Starting ${the_IE}"
     cd llama.cpp
     ./build/bin/llama-server -m "../Models/${the_model}" "${IE_log}"
     cd ..
   else
-    echo "Unrecognized IE $the_IE. ABORTING Test"
+    echo "Unrecognized IE ${the_IE}. ABORTING Test"
     exit
   fi
 # Wait for Inference Engine to initialize. Verify by listing Models
@@ -61,15 +61,18 @@ startIE {
     "until curl -s "${model_url}">/dev/null; do sleep 1; done"
   # Trap timeout condition
   if [ $? -eq 124 ]; then
-    echo "Timed out waiting for $the_IE to Start"
+    echo "Timed out waiting for ${the_IE} to Start"
     exit 30
   fi
 }
 
-stopIE {
+stopIE() {
   # Stop Inference Engine background process using PGREP
   local the_IE="$1"
 
+  if [[ $the_IE == "llama.cpp-CPU" ]]; then
+      the_IE="llama-server"         # match syntax w/startIE() cmdline
+  fi
   pkill -f "${the_IE}"
   if [ $? -eq 0 ]; then
       echo "Killed ${the_IE} - IE background process"
