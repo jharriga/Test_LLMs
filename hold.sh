@@ -12,14 +12,15 @@ runBmark {
   local the_url="$1"
   local the_model="$2"
   local the_prompt="$3"
-  
+  # Create a timestamped LOGFILE
+  BMARK_log=" | tee ${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").BMARKlog 2>&1"
   cd openai-llm-benchmark
   uv sync
   uv run openai-llm-benchmark.py \
       --base-url "${the_url}" \
       --model "${the_model}" --requests 1000 \
       --concurrency 1 --max-tokens 100 \
-      --prompt "${the_prompt}"
+      --prompt "${the_prompt}" "${BMARK_log}"
   cd ..
 }
 
@@ -28,24 +29,24 @@ startIE {
   local the_IE="$1"
   local the_model="$2"
   local the_url="$3"
-  local the_imagetag="$4"
   model_url="${the_url}/v1/models"    # used to verify startup
-  IE_log=" > ${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S") 2>&1 &"
+  # Create a timestamped LOGFILE and execute as Background process
+  IE_log=" > ${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").IElog 2>&1 &"
   
   if [[ $the_IE == "vllm-CPU" ]]; then
-    echo "Starting $the_IE using $the_imagetag"
+    echo "Starting $the_IE"
     podman run --rm --privileged=true --shm-size=4g -p 8000:8000 \
       -e VLLM_CPU_KVCACHE_SPACE=40 \
       -e VLLM_CPU_OMP_THREADS_BIND=0-5 \
       -v $PWD/Models/repos:/model \
-      "${the_imagetag}" --model "${the_model}" \
+      "${the_IE}" --model "${the_model}" \
       --block-size 16 "${IE_log}"
   elif [[ $the_IE == "vllm-GPU" ]]; then
-    echo "Starting $the_IE using $the_imagetag"
+    echo "Starting $the_IE"
     podman run --rm --security-opt=label=disable \
       --device=nvidia.com/gpu=all -p 8000:8000 --ipc=host \
       -v $PWD/Models/repos:/model \
-      "${the_imagetag}" --model "${the_model}" "${IE_log}"
+      "${the_IE}" --model "${the_model}" "${IE_log}"
   elif [[ $the_IE == "llama.cpp-CPU" ]]; then
     echo "Starting $the_IE"
     cd llama.cpp
@@ -89,8 +90,8 @@ echo "Done cloning the BENCHMARK Inference Engine repos"
 # Determine which vLLM podman images are available (locally)
 #podman images
 
-# Initialize vars used by all test-runs
-testIE_arr=("vllm-GPU" "vllm-CPU" "llama.cpp-CPU")
+# Initialize vars used in 'startIE' and 'runBmark' functions
+testIE_arr=("vllm-gpu" "vllm-cpu-env" "llama.cpp-CPU")
 testURL_arr=("http://127.0.0.1:8000" \
              "http://127.0.0.1:8000" \
              "http://127.0.0.1:8080")
@@ -106,9 +107,9 @@ for ie in "${testIE_arr[@]}"; do
     echo "Entering main TEST Loop with $ie and $url"
     for model in "${testMODELS_arr[@]}"; do
         echo "Entering inner TEST Loop with $ie & $model"
-        startIE "$ie" "$model" "${url}"
-        runBmark "${url}" "$model" "${testPROMPT}"
-        stopIE "$ie"
+        startIE "${ie}" "${url}" "${model}"           # Start the Inference Engine
+        runBmark "${url}" "${model}" "${testPROMPT}"  # Run the Benchmark
+        stopIE "$ie"                                  # Stop the Inference Engine
     done                  # Inner FOR Loop
-    ((url_index+=1))      # increment to pickup correct IE url
+    ((url_index+=1))      # increment to pickup (next) correct IE url
 done                      # Outer FOR Loop
