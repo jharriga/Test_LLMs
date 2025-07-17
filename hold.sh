@@ -31,22 +31,21 @@ startIE() {
   local the_url="$3"
   model_url="${the_url}/v1/models"    # used to verify startup
   # Create a timestamped LOGFILE and execute as Background process
-  IE_log=" > ${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").IElog 2>&1 &"
+  IE_log="${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").IElog"
   
   if [[ $the_IE == "vllm-cpu-env" ]]; then
     echo "Starting ${the_IE}"
-    podman run --rm --privileged=true --shm-size=4g -p 8000:8000 \
+    podman run -d --out="${IE_log}" --rm --privileged=true --shm-size=4g -p 8000:8000 \
       -e VLLM_CPU_KVCACHE_SPACE=40 \
       -e VLLM_CPU_OMP_THREADS_BIND=0-5 \
       -v $PWD/Models:/model \
-      "${the_IE}" --model "${the_model}" \
-      --block-size 16 "${IE_log}"
+      "${the_IE}" --model "${the_model}" --block-size 16
   elif [[ $the_IE == "vllm-gpu" ]]; then
     echo "Starting ${the_IE}"
-    podman run --rm --security-opt=label=disable \
+    podman run -d --out="${IE_log}" --rm --security-opt=label=disable \
       --device=nvidia.com/gpu=all -p 8000:8000 --ipc=host \
       -v $PWD/Models:/model \
-      "${the_IE}" --model "${the_model}" "${IE_log}"
+      "${the_IE}" --model "${the_model}"
   elif [[ $the_IE == "llama.cpp-CPU" ]]; then
     echo "Starting ${the_IE}"
     cd llama.cpp
@@ -73,12 +72,15 @@ stopIE() {
 
   if [[ $the_IE == "llama.cpp-CPU" ]]; then
       the_IE="llama-server"         # match syntax w/startIE() cmdline
-  fi
-  pkill -f "${the_IE}"
-  if [ $? -eq 0 ]; then
-      echo "Killed ${the_IE} - IE background process"
+      pkill -f "${the_IE}"
   else
-      echo "Unable to PKILL ${the_IE}. Exit status: $?"
+      podman kill "${the_IE}"
+  fi
+  # check return code
+  if [ $? -eq 0 ]; then
+      echo "Killed ${the_IE}"
+  else
+      echo "Unable to kill ${the_IE}. Exit status: $?"
       exit 20
   fi
 }
