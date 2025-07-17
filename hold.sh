@@ -77,7 +77,8 @@ stopIE() {
   if [ $? -eq 0 ]; then
       echo "Killed ${the_IE} - IE background process"
   else
-        echo "Unable to PKILL ${the_IE}. Exit status: $?"
+      echo "Unable to PKILL ${the_IE}. Exit status: $?"
+      exit 20
   fi
 }
 # END FUNCTIONS
@@ -127,3 +128,6 @@ for ie in "${testIE_arr[@]}"; do
     done                  # Inner FOR Loop
     ((url_index+=1))      # increment to pickup (next) correct IE url
 done                      # Outer FOR Loop
+
+echo "Done with testing"
+
