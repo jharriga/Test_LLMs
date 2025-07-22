@@ -44,8 +44,8 @@ podman build -f "${containerFile}" \
 
 echo; echo "Build vLLM-GPU using 'podman build'"
 # Build vllm-gpu image
-# NOTE: FROM nvidia/cuda:12.8.1-devel-ubuntu20.04 AS base
-#      WAITS for user input :(
+# NOTE: this requires ALOT of disk space in '/var/lib' & TMPDIR.
+#    May need to reassign TMPDIR location: "export TMPDIR=/home/tmpdir"
 podman build -f docker/Dockerfile \ 
   --build-arg RUN_WHEEL_CHECK="false" \ 
   --tag vllm-gpu --target vllm-openai .
