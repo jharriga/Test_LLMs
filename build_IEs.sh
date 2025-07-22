@@ -37,11 +37,15 @@ else
 fi
 
 cd vllm
+# Build vllm-cpu-env image
 podman build -f "${containerFile}" \
   --build-arg VLLM_CPU_DISABLE_AVX512="true" \
   --tag vllm-cpu-env --target "${targetName}" .
 
 echo; echo "Build vLLM-GPU using 'podman build'"
+# Build vllm-gpu image
+# NOTE: FROM nvidia/cuda:12.8.1-devel-ubuntu20.04 AS base
+#      WAITS for user input :(
 podman build -f docker/Dockerfile \ 
   --build-arg RUN_WHEEL_CHECK="false" \ 
   --tag vllm-gpu --target vllm-openai .
