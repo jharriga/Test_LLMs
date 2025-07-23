@@ -7,6 +7,17 @@
 
 #------------------------------------------------------------------------
 # FUNCTIONS
+error_exit() {
+  local the_errmsg="$1"
+  
+  if [ "$?" != "0" ]; then
+    echo "ERROR: $1"
+    # Additional error handling logic can be added here
+
+    exit "$?"
+  fi
+}
+
 runBmark() {
 # Add "the_Bmark" and "the_BmarkCMD" to enable other Benchmarks to be run
 #############
@@ -17,12 +28,14 @@ runBmark() {
   # Create a timestamped LOGFILE
   BMARK_log=" | tee ${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").BMARKlog 2>&1"
   cd openai-llm-benchmark
+  error_exit "Unable to find Bmark directory"
   uv sync
   uv run openai-llm-benchmark.py \
       --base-url "${the_url}" \
       --model "${the_model}" --requests 1000 \
       --concurrency 1 --max-tokens 100 \
       --prompt "${the_prompt}" "${BMARK_log}"
+  error_exit "Bmark execution failure"
   cd ..
 }
 
@@ -57,14 +70,16 @@ startIE() {
     echo "Unrecognized IE ${the_IE}. ABORTING Test"
     exit
   fi
-# Wait for Inference Engine to initialize. Verify by listing Models
+  error_exit "${the_IE} execution failure"
+  
+# Wait for Inference Engine to initialize. Verify by listing available Models
   timeout 10 bash -c \
     "until curl -s "${model_url}">/dev/null; do sleep 1; done"
   # Trap timeout condition
   if [ $? -eq 124 ]; then
     echo "Timed out waiting for ${the_IE} to Start"
     stopIE "${the_IE}"           # be thorough
-    exit 30
+    exit "$?"
   fi
 }
 
@@ -79,12 +94,8 @@ stopIE() {
       podman kill "${the_IE}"
   fi
   # check return code
-  if [ $? -eq 0 ]; then
-      echo "Killed ${the_IE}"
-  else
-      echo "Unable to kill ${the_IE}. Exit status: $?"
-      exit 20
-  fi
+  error_exit "Unable to kill ${the_IE}. Exit status: $?"
+  echo "Succesfully Killed ${the_IE}"
 }
 # END FUNCTIONS
 
@@ -95,6 +106,7 @@ BMARKrepo_arr=("https://github.com/robert-mcdermott/openai-llm-benchmark" \
 
 # Install necessary Tools
 curl -LsSf https://astral.sh/uv/install.sh | sh>/dev/null
+error_exit "Unable to install UV. Exit status: $?"
 
 echo; echo "Clone the BENCHMARK Inference Engine repos"
 for BMARK_repo in "${BMARKrepo_arr[@]}"; do
@@ -103,6 +115,7 @@ for BMARK_repo in "${BMARKrepo_arr[@]}"; do
     if [ ! -d "$BMARK_path" ]; then
        echo "Cloning $BMARK_repo"
        git clone "${BMARK_repo}">/dev/null
+       error_exit "Unable to git clone ${BMARK_repo}. Exit status: $?"
     fi
 done
 echo "Done cloning the BENCHMARK Inference Engine repos"
