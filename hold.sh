@@ -8,6 +8,8 @@
 #------------------------------------------------------------------------
 # FUNCTIONS
 runBmark() {
+# Add "the_Bmark" and "the_BmarkCMD" to enable other Benchmarks to be run
+#############
   # Execute the Benchmark/Workload
   local the_url="$1"
   local the_model="$2"
