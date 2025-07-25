@@ -42,14 +42,15 @@ podman build -f "${containerFile}" \
   --build-arg VLLM_CPU_DISABLE_AVX512="true" \
   --tag vllm-cpu-env --target "${targetName}" .
 
-echo; echo "Build vLLM-GPU using 'podman build'"
+## OPTIONAL
+##echo; echo "Build vLLM-GPU using 'podman build'"
 # Build vllm-gpu image
 # NOTE: this requires ALOT of disk space in '/var/lib' & TMPDIR.
 #    May need to reassign TMPDIR location: "export TMPDIR=/home/tmpdir"
 #    AND /var/lib/containers: "ln -s /home/containers/ /var/lib/containers; reboot"
-podman build -f docker/Dockerfile \
-  --build-arg RUN_WHEEL_CHECK="false" \
-  --tag vllm-gpu --target vllm-openai .
+##podman build -f docker/Dockerfile \
+##  --build-arg RUN_WHEEL_CHECK="false" \
+##  --tag vllm-gpu --target vllm-openai .
 
 podman images
 
