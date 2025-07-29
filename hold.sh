@@ -30,6 +30,8 @@ runBmark() {
   BMARK_log="${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").BMARKlog 2>&1"
   cd openai-llm-benchmark
   error_exit "Unable to find Bmark directory"
+  # Verify the_IE is actually running
+  ## ADD CURL call here   <--
   uv sync
   uv run openai-llm-benchmark.py \
       --base-url "${the_url}" \
@@ -58,7 +60,7 @@ startIE() {
       "${the_IE}" --model "/model/${the_model}" --block-size 16
   elif [[ $the_IE == "vllm-gpu" ]]; then
     echo "Starting ${the_IE}"
-    podman run -d --name "${the_IE}" -d --rm --security-opt=label=disable \
+    podman run --name "${the_IE}" -d --rm --security-opt=label=disable \
       --device=nvidia.com/gpu=all -p 8000:8000 --ipc=host \
       -v $PWD/Models:/model \
       "${the_IE}" --model "/model/${the_model}"
@@ -79,7 +81,7 @@ startIE() {
   if [ $? -eq 124 ]; then
     echo "Timed out waiting for ${the_IE} to Start"
     stopIE "${the_IE}"           # be thorough
-    error_exit "$?"
+    error_exit "curl timed-out"
   fi
 }
 
