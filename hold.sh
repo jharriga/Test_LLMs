@@ -22,11 +22,12 @@ runBmark() {
 # Add "the_Bmark" and "the_BmarkCMD" to enable other Benchmarks to be run
 #############
   # Execute the Benchmark/Workload
-  local the_url="$1"
-  local the_model="$2"
-  local the_prompt="$3"
+  local the_IE="$1"
+  local the_url="$2"
+  local the_model="$3"
+  local the_prompt="$4"
   # Create a timestamped LOGFILE
-  BMARK_log=" | tee ${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").BMARKlog 2>&1"
+  BMARK_log="${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").BMARKlog 2>&1"
   cd openai-llm-benchmark
   error_exit "Unable to find Bmark directory"
   uv sync
@@ -34,7 +35,7 @@ runBmark() {
       --base-url "${the_url}" \
       --model "${the_model}" --requests 1000 \
       --concurrency 1 --max-tokens 100 \
-      --prompt "${the_prompt}" "${BMARK_log}"
+      --prompt "${the_prompt}" --output-file "${BMARK_log}"
   error_exit "Bmark execution failure"
   cd ..
 }
@@ -141,7 +142,7 @@ for ie in "${testIE_arr[@]}"; do
     for model in "${testMODELS_arr[@]}"; do
         echo "Entering inner TEST Loop with $ie & $model"
         startIE "${ie}" "${model}" "${url}"           # Start the Inference Engine
-        runBmark "${url}" "${model}" "${testPROMPT}"  # Run the Benchmark
+        runBmark "{$ie}" "${url}" "${model}" "${testPROMPT}"  # Run the Benchmark
         stopIE "${ie}"                                # Stop the Inference Engine
     done                  # Inner FOR Loop
     ((url_index+=1))      # increment to pickup (next) correct IE url
