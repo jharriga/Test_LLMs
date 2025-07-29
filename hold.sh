@@ -54,13 +54,13 @@ startIE() {
       -e VLLM_CPU_KVCACHE_SPACE=40 \
       -e VLLM_CPU_OMP_THREADS_BIND=0-5 \
       -v $PWD/Models:/model \
-      "${the_IE}" --model "${the_model}" --block-size 16
+      "${the_IE}" --model "/model/${the_model}" --block-size 16
   elif [[ $the_IE == "vllm-gpu" ]]; then
     echo "Starting ${the_IE}"
     podman run -d --name "${the_IE}" -d --rm --security-opt=label=disable \
       --device=nvidia.com/gpu=all -p 8000:8000 --ipc=host \
       -v $PWD/Models:/model \
-      "${the_IE}" --model "${the_model}"
+      "${the_IE}" --model "/model/${the_model}"
   elif [[ $the_IE == "llama.cpp-CPU" ]]; then
     echo "Starting ${the_IE}"
     cd llama.cpp
@@ -125,9 +125,9 @@ echo "Done cloning the BENCHMARK Inference Engine repos"
 
 # Initialize vars used in 'startIE' and 'runBmark' functions
 testIE_arr=("vllm-gpu" "vllm-cpu-env" "llama.cpp-CPU")
-testURL_arr=("http://127.0.0.1:8000" \
-             "http://127.0.0.1:8000" \
-             "http://127.0.0.1:8080")
+testURL_arr=("http://localhost:8000" \
+             "http://localhost:8000" \
+             "http://localhost:8080")
 testMODELS_arr=("SmolLM2-135M-Instruct" \
                 "SmolLM2-360M-Instruct" \
                 "SmolLM2-1.7B-Instruct")
