@@ -8,13 +8,12 @@
 #------------------------------------------------------------------------
 # FUNCTIONS
 error_exit() {
-  local the_errmsg="$1"
   
   if [ "$?" != "0" ]; then
     echo "ERROR: $1"
     # Additional error handling logic can be added here
 
-    exit "$?"
+    exit "$1"
   fi
 }
 
@@ -67,7 +66,7 @@ startIE() {
   elif [[ $the_IE == "llama.cpp-CPU" ]]; then
     echo "Starting ${the_IE}"
     cd llama.cpp
-    ./build/bin/llama-server -m "../Models/${the_model}" "${IE_log}"
+    ./build/bin/llama-server -m "../Models/${the_model}" --log-file "${IE_log}"
     cd ..
   else
     error_exit "Unrecognized IE ${the_IE}. ABORTING Test"
@@ -95,8 +94,8 @@ stopIE() {
   else
       podman kill "${the_IE}"
   fi
-  # check return code
-  error_exit "Unable to kill ${the_IE}. Exit status: $?"
+  # check KILL return code
+  error_exit "Unable to kill ${the_IE}"
   echo "Succesfully Killed ${the_IE}"
 }
 # END FUNCTIONS
@@ -142,7 +141,7 @@ for ie in "${testIE_arr[@]}"; do
     echo "Entering main TEST Loop with $ie and $url"
     for model in "${testMODELS_arr[@]}"; do
         echo "Entering inner TEST Loop with $ie & $model"
-        startIE "${ie}" "${model}" "${url}"           # Start the Inference Engine
+        startIE "${ie}" "${url}" "${model}"          # Start the Inference Engine
         runBmark "{$ie}" "${url}" "${model}" "${testPROMPT}"  # Run the Benchmark
         stopIE "${ie}"                                # Stop the Inference Engine
     done                  # Inner FOR Loop
