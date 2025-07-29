@@ -43,8 +43,8 @@ runBmark() {
 startIE() {
   # Start Inference Engine in the background
   local the_IE="$1"
-  local the_model="$2"
-  local the_url="$3"
+  local the_url="$2"
+  local the_model="$3"
   model_url="${the_url}/v1/models"    # used to verify startup
   # Create a timestamped LOGFILE and execute as Background process
   IE_log="${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").IElog"
