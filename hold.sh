@@ -68,8 +68,7 @@ startIE() {
     ./build/bin/llama-server -m "../Models/${the_model}" "${IE_log}"
     cd ..
   else
-    echo "Unrecognized IE ${the_IE}. ABORTING Test"
-    exit
+    error_exit "Unrecognized IE ${the_IE}. ABORTING Test"
   fi
   error_exit "${the_IE} execution failure"
   
@@ -80,7 +79,7 @@ startIE() {
   if [ $? -eq 124 ]; then
     echo "Timed out waiting for ${the_IE} to Start"
     stopIE "${the_IE}"           # be thorough
-    exit "$?"
+    error_exit "$?"
   fi
 }
 
