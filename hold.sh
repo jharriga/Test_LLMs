@@ -7,6 +7,11 @@
 
 #------------------------------------------------------------------------
 # FUNCTIONS
+mark_ms() {
+    read up rest </proc/uptime; marker="${up%.*}${up#*.}"
+    echo "$marker"                 # return value
+}
+
 error_handler() {
   local the_msg="$1"
 
@@ -21,8 +26,13 @@ verifyIE() {
   local the_IE="$1"
   local the_model_url="$2"
   # Is two minutes ENOUGH?
-  timeout 120 bash -c \
+  preaction=$(mark_ms)
+  timeout 1000 bash -c \
     "until curl -s "${the_model_url}">/dev/null; do sleep 1; done"
+  ## DEBUG - measure time interval for processing ACTION
+  postaction=$(mark_ms)
+  interval=$(( 10*(postaction - preaction) ))
+  echo "INTERVAL= $interval ms"
   # Trap timeout condition
   if [ $? -eq 124 ]; then
     stopIE "${the_IE}"           # be thorough
