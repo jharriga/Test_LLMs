@@ -25,19 +25,20 @@ verifyIE() {
 # Wait for Inference Engine to initialize. Verify by listing available Models
   local the_IE="$1"
   local the_model_url="$2"
-  # Is two minutes ENOUGH?
+  local wait_sec=600
+  # Is ten minutes ENOUGH?
   preaction=$(mark_ms)
-  timeout 1000 bash -c \
+  timeout "$wait_sec" bash -c \
     "until curl -s "${the_model_url}">/dev/null; do sleep 1; done"
-  ## DEBUG - measure time interval for processing ACTION
-  postaction=$(mark_ms)
-  interval=$(( 10*(postaction - preaction) ))
-  echo "INTERVAL= $interval ms"
   # Trap timeout condition
   if [ $? -eq 124 ]; then
     stopIE "${the_IE}"           # be thorough
-    error_handler "verifyIE timed-out starting ${the_IE}"
+    error_handler "verifyIE timed-out starting ${the_IE}. Waited $wait_sec sec"
   fi
+  ## DEBUG - measure time interval for processing ACTION
+  postaction=$(mark_ms)
+  interval=$(( 10*(postaction - preaction) ))
+  echo "WAITED= $interval ms"
   echo "Succesfully verified ${the_IE}"
 }
 
