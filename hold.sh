@@ -127,6 +127,7 @@ stopIE() {
     error_handler "Unable to kill ${the_IE}. Exit status: $?"
   fi
   echo "Succesfully Killed ${the_IE}"
+  sleep 10              # DEBUG - find a better way to confirm
 }
 # END FUNCTIONS
 
