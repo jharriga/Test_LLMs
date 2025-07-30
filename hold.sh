@@ -7,14 +7,13 @@
 
 #------------------------------------------------------------------------
 # FUNCTIONS
-error_exit() {
-  
-  if [ "$?" != "0" ]; then
-    echo "ERROR: $1"
-    # Additional error handling logic can be added here
+error_handler() {
+  local the_msg="$1"
 
-    exit "$1"
-  fi
+  echo "ERROR Exiting: ${the_msg}"
+  # Additional error handling logic can be added here
+
+  exit 30            # pick a number for universal exit code
 }
 
 verifyIE() {
@@ -26,10 +25,10 @@ verifyIE() {
     "until curl -s "${the_model_url}">/dev/null; do sleep 1; done"
   # Trap timeout condition
   if [ $? -eq 124 ]; then
-    echo "Timed out waiting for ${the_IE} to Start"
     stopIE "${the_IE}"           # be thorough
-    error_exit "verifyIE timed-out"
+    error_handler "verifyIE timed-out starting ${the_IE}"
   fi
+  echo "Succesfully verified ${the_IE}"
 }
 
 runBmark() {
@@ -44,7 +43,7 @@ runBmark() {
   # Create a timestamped LOGFILE
   BMARK_log="${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").BMARKlog 2>&1"
   cd openai-llm-benchmark
-  error_exit "Unable to find Bmark directory"
+  error_handler "Unable to find Bmark directory"
   # Verify the_IE is actually running
   verifyIE "${the_IE}" "${model_url}"
 ##  uv sync
@@ -53,7 +52,11 @@ runBmark() {
 ##      --model "${the_model}" --requests 1000 \
 ##      --concurrency 1 --max-tokens 100 \
 ##      --prompt "${the_prompt}" --output-file "${BMARK_log}"
-##  error_exit "Bmark execution failure"
+#### check return code
+##  if [ "$?" != "0" ]; then
+##    cd ..
+##    error_handler "Unable to start the Workload. Exit status: $?"
+##  fi
   cd ..
 }
 
@@ -66,35 +69,36 @@ startIE() {
   # Create a timestamped LOGFILE and execute as Background process
   IE_log="${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").IElog"
   
+ echo "Attempting to Start: ${the_IE}"
   if [[ $the_IE == "vllm-cpu-env" ]]; then
-    echo "Starting ${the_IE}"
     podman run --name "${the_IE}" -d --rm --privileged=true --shm-size=4g -p 8000:8000 \
       -e VLLM_CPU_KVCACHE_SPACE=40 \
       -e VLLM_CPU_OMP_THREADS_BIND=0-5 \
       -v $PWD/Models:/model \
       "${the_IE}" --model "/model/${the_model}" --block-size 16
   elif [[ $the_IE == "vllm-gpu" ]]; then
-    echo "Starting ${the_IE}"
     podman run --name "${the_IE}" -d --rm --security-opt=label=disable \
       --device=nvidia.com/gpu=all -p 8000:8000 --ipc=host \
       -v $PWD/Models:/model \
       "${the_IE}" --model "/model/${the_model}"
   elif [[ $the_IE == "llama.cpp-CPU" ]]; then
-    echo "Starting ${the_IE}"
     cd llama.cpp
     ./build/bin/llama-server -m "../Models/${the_model}" --log-file "${IE_log}"
     cd ..
   else
-    error_exit "Unrecognized IE ${the_IE}. ABORTING Test"
+    error_handler "Unrecognized IE ${the_IE}. ABORTING Test"
   fi
-  error_exit "${the_IE} execution failure"
+  # check return code
+  if [ "$?" != "0" ]; then
+    error_handler "Unable to start ${the_IE}. Exit status: $?"
+  fi
   
 # Wait for Inference Engine to initialize. Verify by listing available Models
   verifyIE "${the_IE}" "${model_url}"
 }
 
 stopIE() {
-  # Stop Inference Engine background process using PGREP
+  # Stop Inference Engine background process using PKILL or 'podman kill'
   local the_IE="$1"
 
   if [[ $the_IE == "llama.cpp-CPU" ]]; then
@@ -104,7 +108,9 @@ stopIE() {
       podman kill "${the_IE}"
   fi
   # check KILL return code
-  error_exit "Unable to kill ${the_IE}"
+  if [ "$?" != "0" ]; then
+    error_handler "Unable to kill ${the_IE}. Exit status: $?"
+  fi
   echo "Succesfully Killed ${the_IE}"
 }
 # END FUNCTIONS
@@ -116,7 +122,10 @@ BMARKrepo_arr=("https://github.com/robert-mcdermott/openai-llm-benchmark" \
 
 # Install necessary Tools
 curl -LsSf https://astral.sh/uv/install.sh | sh>/dev/null
-error_exit "Unable to install UV. Exit status: $?"
+# check KILL return code
+if [ "$?" != "0" ]; then
+    error_handler "Unable to install UV. Exit status: $?"
+fi
 
 echo; echo "Clone the BENCHMARK Inference Engine repos"
 for BMARK_repo in "${BMARKrepo_arr[@]}"; do
@@ -125,7 +134,7 @@ for BMARK_repo in "${BMARKrepo_arr[@]}"; do
     if [ ! -d "$BMARK_path" ]; then
        echo "Cloning $BMARK_repo"
        git clone "${BMARK_repo}">/dev/null
-       error_exit "Unable to git clone ${BMARK_repo}. Exit status: $?"
+       error_handler "Unable to git clone ${BMARK_repo}. Exit status: $?"
     fi
 done
 echo "Done cloning the BENCHMARK Inference Engine repos"
