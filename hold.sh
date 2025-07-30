@@ -20,8 +20,8 @@ verifyIE() {
 # Wait for Inference Engine to initialize. Verify by listing available Models
   local the_IE="$1"
   local the_model_url="$2"
-
-  timeout 10 bash -c \
+  # Is two minutes ENOUGH?
+  timeout 120 bash -c \
     "until curl -s "${the_model_url}">/dev/null; do sleep 1; done"
   # Trap timeout condition
   if [ $? -eq 124 ]; then
