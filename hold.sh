@@ -69,7 +69,7 @@ startIE() {
   # Create a timestamped LOGFILE and execute as Background process
   IE_log="${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").IElog"
   
- echo "Attempting to Start: ${the_IE}"
+ echo "Attempting to Start: ${the_IE}. Expect long delay..."
   if [[ $the_IE == "vllm-cpu-env" ]]; then
     podman run --name "${the_IE}" -d --rm --privileged=true \
       --shm-size=4g -p 8000:8000 \
