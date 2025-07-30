@@ -25,7 +25,7 @@ verifyIE() {
 # Wait for Inference Engine to initialize. Verify by listing available Models
   local the_IE="$1"
   local the_model_url="$2"
-  local wait_sec=600
+  local wait_sec=600                # BIG for TIMEOUT
   # Is ten minutes ENOUGH?
   preaction=$(mark_ms)
   timeout "$wait_sec" bash -c \
@@ -38,7 +38,7 @@ verifyIE() {
   ## DEBUG - measure time interval for processing ACTION
   postaction=$(mark_ms)
   interval=$(( 10*(postaction - preaction) ))
-  echo "WAITED= $interval ms"
+  echo "WAITED= $interval ms for ${the_IE} to Initialize"
   echo "Succesfully verified ${the_IE}"
 }
 
@@ -54,7 +54,9 @@ runBmark() {
   # Create a timestamped LOGFILE
   BMARK_log="${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").BMARKlog 2>&1"
   cd openai-llm-benchmark
-  error_handler "Unable to find Bmark directory"
+  if [ "$?" != "0" ]; then
+    error_handler "Unable to find Bmark directory"
+  fi
   # Verify the_IE is actually running
   verifyIE "${the_IE}" "${model_url}"
 ##  uv sync
