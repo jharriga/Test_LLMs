@@ -17,6 +17,21 @@ error_exit() {
   fi
 }
 
+verifyIE() {
+# Wait for Inference Engine to initialize. Verify by listing available Models
+  local the_IE="$1"
+  local the_model_url="$2"
+
+  timeout 10 bash -c \
+    "until curl -s "${the_model_url}">/dev/null; do sleep 1; done"
+  # Trap timeout condition
+  if [ $? -eq 124 ]; then
+    echo "Timed out waiting for ${the_IE} to Start"
+    stopIE "${the_IE}"           # be thorough
+    error_exit "verifyIE timed-out"
+  fi
+}
+
 runBmark() {
 # Add "the_Bmark" and "the_BmarkCMD" to enable other Benchmarks to be run
 #############
@@ -25,19 +40,20 @@ runBmark() {
   local the_url="$2"
   local the_model="$3"
   local the_prompt="$4"
+  model_url="${the_url}/v1/models"    # used to verify startup
   # Create a timestamped LOGFILE
   BMARK_log="${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").BMARKlog 2>&1"
   cd openai-llm-benchmark
   error_exit "Unable to find Bmark directory"
   # Verify the_IE is actually running
-  ## ADD CURL call here   <--
-  uv sync
-  uv run openai-llm-benchmark.py \
-      --base-url "${the_url}" \
-      --model "${the_model}" --requests 1000 \
-      --concurrency 1 --max-tokens 100 \
-      --prompt "${the_prompt}" --output-file "${BMARK_log}"
-  error_exit "Bmark execution failure"
+  verifyIE "${the_IE}" "${model_url}"
+##  uv sync
+##  uv run openai-llm-benchmark.py \
+##      --base-url "${the_url}" \
+##      --model "${the_model}" --requests 1000 \
+##      --concurrency 1 --max-tokens 100 \
+##      --prompt "${the_prompt}" --output-file "${BMARK_log}"
+##  error_exit "Bmark execution failure"
   cd ..
 }
 
@@ -74,14 +90,7 @@ startIE() {
   error_exit "${the_IE} execution failure"
   
 # Wait for Inference Engine to initialize. Verify by listing available Models
-  timeout 10 bash -c \
-    "until curl -s "${model_url}">/dev/null; do sleep 1; done"
-  # Trap timeout condition
-  if [ $? -eq 124 ]; then
-    echo "Timed out waiting for ${the_IE} to Start"
-    stopIE "${the_IE}"           # be thorough
-    error_exit "curl timed-out"
-  fi
+  verifyIE "${the_IE}" "${model_url}"
 }
 
 stopIE() {
