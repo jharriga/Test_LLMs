@@ -98,7 +98,9 @@ startIE() {
       "${the_IE}" --model "/model/${the_model}"
   elif [[ $the_IE == "llama.cpp-CPU" ]]; then
     cd llama.cpp
-    ./build/bin/llama-server -m "../Models/${the_model}.gguf" --log-file "${IE_log}"
+    # Look into '--metrics'
+    ./build/bin/llama-server -m "../Models/${the_model}.gguf" \
+      --log-file "../${IE_log}" >/dev/null 2>&1 &
     cd ..
   else
     error_handler "Unrecognized IE ${the_IE}. ABORTING Test"
