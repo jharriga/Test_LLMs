@@ -59,6 +59,7 @@ runBmark() {
   fi
   # Verify the_IE is actually running
   verifyIE "${the_IE}" "${model_url}"
+  echo "Run starting - Logfile: ${BMARK_log}"
   uv sync
   uv run openai-llm-benchmark.py \
       --base-url "${the_url}" \
@@ -179,7 +180,7 @@ for ie in "${testIE_arr[@]}"; do
     for model in "${testMODELS_arr[@]}"; do
         echo "Entering inner TEST Loop with $ie & $model"
         startIE "${ie}" "${url}" "${model}"          # Start the Inference Engine
-        runBmark "{$ie}" "${url}" "${model}" "${testPROMPT}"  # Run the Benchmark
+        runBmark "${ie}" "${url}" "${model}" "${testPROMPT}"  # Run the Benchmark
         stopIE "${ie}"                                # Stop the Inference Engine
     done                  # Inner FOR Loop
     ((url_index+=1))      # increment to pickup (next) correct IE url
