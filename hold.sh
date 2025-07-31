@@ -26,10 +26,10 @@ verifyIE() {
   local the_IE="$1"
   local the_model_url="$2"
   local wait_sec=600                # BIG for TIMEOUT
-  # Is ten minutes ENOUGH?
+  # DEBUG - find a better way to confirm
   preaction=$(mark_ms)
   timeout "$wait_sec" bash -c \
-    "until curl -s "${the_model_url}">/dev/null; do sleep 1; done"
+    "until curl -s -H 'Cache-Control: no-cache, no-store' "${the_model_url}">/dev/null; do sleep 1; done"
   # Trap timeout condition
   if [ $? -eq 124 ]; then
     stopIE "${the_IE}"           # be thorough
@@ -63,7 +63,7 @@ runBmark() {
   uv sync
   uv run openai-llm-benchmark.py \
       --base-url "${the_url}" \
-      --model "${the_model}" --requests 1000 \
+      --model "/model/${the_model}" --requests 1000 \
       --concurrency 1 --max-tokens 100 \
       --prompt "${the_prompt}" --output-file "${BMARK_log} 2>&1"
 # check return code
@@ -128,7 +128,7 @@ stopIE() {
   fi
   # check KILL return code
   if [ "$?" != "0" ]; then
-    error_handler "Unable to kill ${the_IE}. Exit status: $?"
+    error_handler "Unable to kill ${the_IE}"
   fi
   echo "Succesfully Killed ${the_IE}"
   sleep 10              # DEBUG - find a better way to confirm
@@ -167,9 +167,9 @@ testIE_arr=("vllm-gpu" "vllm-cpu-env" "llama.cpp-CPU")
 testURL_arr=("http://localhost:8000" \
              "http://localhost:8000" \
              "http://localhost:8080")
-testMODELS_arr=("/model/SmolLM2-135M-Instruct" \
-                "/model/SmolLM2-360M-Instruct" \
-                "/model/SmolLM2-1.7B-Instruct")
+testMODELS_arr=("SmolLM2-135M-Instruct" \
+                "SmolLM2-360M-Instruct" \
+                "SmolLM2-1.7B-Instruct")
 testPROMPT="What is the capital of Washington state in the USA?  /no_think"
 
 # Now get to work with TEST Loop
