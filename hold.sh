@@ -60,8 +60,8 @@ runBmark() {
   # Verify the_IE is actually running
   verifyIE "${the_IE}" "${model_url}"
   echo "Run starting - RESULTS file: ${BMARK_res}"
-  uv sync
-  # add '--quiet' to silence the workload
+  uv sync > /dev/null 2>&1                # Silence
+  # OPTIONAL add '--quiet' to silence the progress-bar
   uv run openai-llm-benchmark.py \
       --base-url "${the_url}" \
       --model "/model/${the_model}" --requests 1000 \
