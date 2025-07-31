@@ -124,9 +124,9 @@ stopIE() {
 
   if [[ $the_IE == "llama.cpp-CPU" ]]; then
       the_IE="llama-server"         # match syntax w/startIE() cmdline
-      pkill -f "${the_IE}"
+      pkill -f "${the_IE}" > /dev/null 2>&1
   else
-      podman kill "${the_IE}"
+      podman kill "${the_IE}" > /dev/null 2>&1
   fi
   # check KILL return code
   if [ "$?" != "0" ]; then
