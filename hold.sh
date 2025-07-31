@@ -52,24 +52,25 @@ runBmark() {
   local the_prompt="$4"
   model_url="${the_url}/v1/models"    # used to verify startup
   # Create a timestamped LOGFILE
-  BMARK_log="${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").BMARKlog 2>&1"
+  BMARK_log="${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").BMARKlog"
   cd openai-llm-benchmark
   if [ "$?" != "0" ]; then
     error_handler "Unable to find Bmark directory"
   fi
   # Verify the_IE is actually running
   verifyIE "${the_IE}" "${model_url}"
-##  uv sync
-##  uv run openai-llm-benchmark.py \
-##      --base-url "${the_url}" \
-##      --model "${the_model}" --requests 1000 \
-##      --concurrency 1 --max-tokens 100 \
-##      --prompt "${the_prompt}" --output-file "${BMARK_log}"
-#### check return code
-##  if [ "$?" != "0" ]; then
-##    cd ..
-##    error_handler "Unable to start the Workload. Exit status: $?"
-##  fi
+  uv sync
+  uv run openai-llm-benchmark.py \
+      --base-url "${the_url}" \
+      --model "${the_model}" --requests 1000 \
+      --concurrency 1 --max-tokens 100 \
+      --prompt "${the_prompt}" --output-file "${BMARK_log} 2>&1"
+# check return code
+  if [ "$?" != "0" ]; then
+    cd ..
+    error_handler "Unable to start the Workload. Exit status: $?"
+  fi
+  echo "Run complete - Logfile: ${BMARK_log}"
   cd ..
 }
 
