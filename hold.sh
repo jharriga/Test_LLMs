@@ -38,7 +38,7 @@ verifyIE() {
   ## DEBUG - measure time interval for processing ACTION
   postaction=$(mark_ms)
   interval=$(( 10*(postaction - preaction) ))
-  echo "WAITED= $interval ms for ${the_IE} to Initialize"
+  echo "STARTup= $interval ms for ${the_IE} at ${the_model_url}"
   echo "Succesfully verified ${the_IE}"
 }
 
