@@ -167,9 +167,9 @@ testIE_arr=("vllm-gpu" "vllm-cpu-env" "llama.cpp-CPU")
 testURL_arr=("http://localhost:8000" \
              "http://localhost:8000" \
              "http://localhost:8080")
-testMODELS_arr=("SmolLM2-135M-Instruct" \
-                "SmolLM2-360M-Instruct" \
-                "SmolLM2-1.7B-Instruct")
+testMODELS_arr=("/model/SmolLM2-135M-Instruct" \
+                "/model/SmolLM2-360M-Instruct" \
+                "/model/SmolLM2-1.7B-Instruct")
 testPROMPT="What is the capital of Washington state in the USA?  /no_think"
 
 # Now get to work with TEST Loop
