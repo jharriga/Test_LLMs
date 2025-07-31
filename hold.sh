@@ -52,27 +52,27 @@ runBmark() {
   local the_prompt="$4"
   model_url="${the_url}/v1/models"    # used to verify startup
   # Create a timestamped LOGFILE.json
-  BMARK_log="../Logs/${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").json"
+  BMARK_res="../Results/${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S")"
   cd openai-llm-benchmark
   if [ "$?" != "0" ]; then
     error_handler "Unable to find Bmark directory"
   fi
   # Verify the_IE is actually running
   verifyIE "${the_IE}" "${model_url}"
-  echo "Run starting - Logfile: ${BMARK_log}"
+  echo "Run starting - RESULTS file: ${BMARK_res}"
   uv sync
   # add '--quiet' to silence the workload
   uv run openai-llm-benchmark.py \
       --base-url "${the_url}" \
       --model "/model/${the_model}" --requests 1000 \
       --concurrency 1 --max-tokens 100 \
-      --prompt "${the_prompt}" --capture-responses --output-file "${BMARK_log}"
+      --prompt "${the_prompt}" | tee "${BMARK_res}"
 # check return code
   if [ "$?" != "0" ]; then
     cd ..
     error_handler "Unable to start the Workload. Exit status: $?"
   fi
-  echo "Run complete - Logfile: ${BMARK_log}"
+  echo "Run complete - RESULTS file: ${BMARK_res}"
   cd ..
 }
 
@@ -84,7 +84,7 @@ startIE() {
   model_url="${the_url}/v1/models"    # used to verify startup
   # Create a timestamped LOGFILE and execute as Background process
   # ? should this be dropped?
-  IE_log="${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").IElog"
+  IE_log="Results/${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").IElog"
   
  echo "Attempting to Start: ${the_IE}. Expect long delay..."
   if [[ $the_IE == "vllm-cpu-env" ]]; then
@@ -102,9 +102,9 @@ startIE() {
       "${the_IE}" --model "/model/${the_model}"
   elif [[ $the_IE == "llama.cpp-CPU" ]]; then
     cd llama.cpp
-    # Look into '--metrics'
+    # Look into use of '--metrics'. Capture with PCP OpenMetrics?
     ./build/bin/llama-server -m "../Models/${the_model}.gguf" \
-      --log-file "../Logs/${IE_log}" >/dev/null 2>&1 &
+      --log-file "../${IE_log}" >/dev/null 2>&1 &
     cd ..
   else
     error_handler "Unrecognized IE ${the_IE}. ABORTING Test"
