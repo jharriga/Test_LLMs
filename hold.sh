@@ -51,8 +51,8 @@ runBmark() {
   local the_model="$3"
   local the_prompt="$4"
   model_url="${the_url}/v1/models"    # used to verify startup
-  # Create a timestamped LOGFILE
-  BMARK_log="${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").BMARKlog"
+  # Create a timestamped LOGFILE.json
+  BMARK_log="../Logs/${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").json"
   cd openai-llm-benchmark
   if [ "$?" != "0" ]; then
     error_handler "Unable to find Bmark directory"
@@ -61,11 +61,12 @@ runBmark() {
   verifyIE "${the_IE}" "${model_url}"
   echo "Run starting - Logfile: ${BMARK_log}"
   uv sync
+  # add '--quiet' to silence the workload
   uv run openai-llm-benchmark.py \
       --base-url "${the_url}" \
       --model "/model/${the_model}" --requests 1000 \
       --concurrency 1 --max-tokens 100 \
-      --prompt "${the_prompt}" --output-file "${BMARK_log} 2>&1"
+      --prompt "${the_prompt}" --capture-responses --output-file "${BMARK_log}"
 # check return code
   if [ "$?" != "0" ]; then
     cd ..
@@ -82,6 +83,7 @@ startIE() {
   local the_model="$3"
   model_url="${the_url}/v1/models"    # used to verify startup
   # Create a timestamped LOGFILE and execute as Background process
+  # ? should this be dropped?
   IE_log="${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").IElog"
   
  echo "Attempting to Start: ${the_IE}. Expect long delay..."
@@ -102,7 +104,7 @@ startIE() {
     cd llama.cpp
     # Look into '--metrics'
     ./build/bin/llama-server -m "../Models/${the_model}.gguf" \
-      --log-file "../${IE_log}" >/dev/null 2>&1 &
+      --log-file "../Logs/${IE_log}" >/dev/null 2>&1 &
     cd ..
   else
     error_handler "Unrecognized IE ${the_IE}. ABORTING Test"
