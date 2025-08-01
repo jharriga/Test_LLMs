@@ -15,7 +15,8 @@ testMODELS_arr=("SmolLM2-135M-Instruct" \
                 "SmolLM2-360M-Instruct" \
                 "SmolLM2-1.7B-Instruct")
 testPROMPT="What is the capital of Washington state in the USA?  /no_think"
-RESULTS_dir="Results/Started_$(date +"%b%d-%Y-%H%M%S")"
+RESULTS_path="$PWD/Results/Started_$(date +"%b%d-%Y-%H%M%S")"
+
 BMARKrepo_arr=("https://github.com/robert-mcdermott/openai-llm-benchmark" \
     "https://github.com/vllm-project/guidellm")
 
@@ -183,11 +184,11 @@ echo "Done cloning the BENCHMARK Inference Engine repos"
 #podman images
 
 # Create RESULTS dir - timestamped
-mkdir -p "${RESULTS_dir}"
+mkdir -p "${RESULTS_path}"
 if [ "$?" != "0" ]; then
     error_handler "Unable to create Results directory"
 fi
-RESULTS_path=realpath "${RESULTS_dir}"
+##RESULTS_path=realpath "${RESULTS_dir}"
 
 # Now get to work with TEST Loop
 url_index=0                         # used to pickup correct IE url
