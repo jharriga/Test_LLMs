@@ -7,5 +7,7 @@ sut# cd Test_vLLM_llama.cpp
 sut# get_models.sh  <-- Edit 'models_arr' for your model repos  
 sut# convert2gguf.sh    
 sut# build_IEs.sh  
-sut# run_tests.sh  
+sut# run_tests.sh | tee console.txt  
 ```
+Results from 'run_tests.sh' can be found in timestamped dirs  
+located within the ./Results dir  
