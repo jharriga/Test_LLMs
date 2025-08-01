@@ -25,18 +25,19 @@ verifyIE() {
 # Wait for Inference Engine to initialize. Verify by listing available Models
   local the_IE="$1"
   local the_model_url="$2"
-  local wait_sec=600                # BIG for TIMEOUT
-  # DEBUG - find a better way to confirm
+  local wait_sec=600                # BIG for TIMEOUT cmd
+  local curl_sec=5                  # retry interval for 'curl'
+  # Poke at IE for list of Models and record time til response
   preaction=$(mark_ms)
   timeout "$wait_sec" bash -c \
-    "until curl -s -H 'Cache-Control: no-cache, no-store' --max-time 5 \
+    "until curl -s --max-time "$curl_sec" \
       "${the_model_url}">/dev/null; do sleep 1; done"
   # Trap timeout condition
   if [ $? -eq 124 ]; then
     stopIE "${the_IE}"           # be thorough
     error_handler "verifyIE timed-out starting ${the_IE}. Waited $wait_sec sec"
   fi
-  ## DEBUG - measure time interval for processing ACTION
+  # Measure and report time interval for curl response
   postaction=$(mark_ms)
   interval=$(( 10*(postaction - preaction) ))
   echo "STARTup= $interval ms for ${the_IE} at ${the_model_url}"
