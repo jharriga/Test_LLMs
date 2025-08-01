@@ -4,6 +4,20 @@
 # Uses workload https://github.com/robert-mcdermott/openai-llm-benchmark.git
 # which is executed within a python 'uv' environment
 # To be used in comparison of vLLM and llama.cpp Inference Engines
+#------------------------------------------------------------------------
+# GLOBAL vars
+# Initialize vars used in 'startIE' and 'runBmark' functions
+testIE_arr=("vllm-gpu" "vllm-cpu-env" "llama.cpp-CPU")
+testURL_arr=("http://localhost:8000" \
+             "http://localhost:8000" \
+             "http://localhost:8080")
+testMODELS_arr=("SmolLM2-135M-Instruct" \
+                "SmolLM2-360M-Instruct" \
+                "SmolLM2-1.7B-Instruct")
+testPROMPT="What is the capital of Washington state in the USA?  /no_think"
+RESULTS_dir="Results/Started_$(date +"%b%d-%Y-%H%M%S")"
+BMARKrepo_arr=("https://github.com/robert-mcdermott/openai-llm-benchmark" \
+    "https://github.com/vllm-project/guidellm")
 
 #------------------------------------------------------------------------
 # FUNCTIONS
@@ -52,29 +66,31 @@ runBmark() {
   local the_url="$2"
   local the_model="$3"
   local the_prompt="$4"
-  model_url="${the_url}/v1/models"    # used to verify startup
-  # Create a timestamped LOGFILE.json
-  BMARK_res="../Results/${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S")"
+  local model_url="${the_url}/v1/models"    # used to verify startup
+  # Create LOGFILE w/results
+  #BMARK_res="../Results/${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S")"
+  local BMARK_log="${RESULTS_path}/${the_IE}_${the_model}.BMARKlog"
+  
   cd openai-llm-benchmark
   if [ "$?" != "0" ]; then
     error_handler "Unable to find Bmark directory"
   fi
   # Verify the_IE is actually running
   verifyIE "${the_IE}" "${model_url}"
-  echo "Run starting - RESULTS file: ${BMARK_res}"
+  echo "Run starting - RESULTS file: ${BMARK_log}"
   uv sync > /dev/null 2>&1                # Silence
   # OPTIONAL add '--quiet' to silence the progress-bar
   uv run openai-llm-benchmark.py \
       --base-url "${the_url}" \
       --model "/model/${the_model}" --requests 1000 \
       --concurrency 1 --max-tokens 100 \
-      --prompt "${the_prompt}" | tee "${BMARK_res}"
+      --prompt "${the_prompt}" | tee "${BMARK_log}"
 # check return code
   if [ "$?" != "0" ]; then
     cd ..
     error_handler "Unable to start the Workload. Exit status: $?"
   fi
-  echo "Run complete - RESULTS file: ${BMARK_res}"
+  echo "Run complete - RESULTS file: ${BMARK_log}"
   cd ..
 }
 
@@ -83,12 +99,14 @@ startIE() {
   local the_IE="$1"
   local the_url="$2"
   local the_model="$3"
-  model_url="${the_url}/v1/models"    # used to verify startup
+  local model_url="${the_url}/v1/models"    # used to verify startup
   # Create a timestamped LOGFILE and execute as Background process
   # ? should this be dropped?
-  IE_log="Results/${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").IElog"
-  
- echo "Attempting to Start: ${the_IE}. Expect long delay..."
+  #IE_log="Results/${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S").IElog"
+  local IE_log="${RESULTS_path}/${the_IE}_${the_model}.IElog"
+
+  # Add LOGGING to the 'podman run' cmdlines
+  echo "Attempting to Start: ${the_IE}. Expect long delay..."
   if [[ $the_IE == "vllm-cpu-env" ]]; then
     podman run --name "${the_IE}" -d --rm --privileged=true \
       --shm-size=4g -p 8000:8000 \
@@ -106,7 +124,7 @@ startIE() {
     cd llama.cpp
     # Look into use of '--metrics'. Capture with PCP OpenMetrics?
     ./build/bin/llama-server -m "../Models/${the_model}.gguf" \
-      --log-file "../${IE_log}" >/dev/null 2>&1 &
+      --log-file "${IE_log}" >/dev/null 2>&1 &
     cd ..
   else
     error_handler "Unrecognized IE ${the_IE}. ABORTING Test"
@@ -134,15 +152,13 @@ stopIE() {
   if [ "$?" != "0" ]; then
     error_handler "Unable to kill ${the_IE}"
   fi
-  echo "Succesfully Killed ${the_IE}"
+  echo "Successfully Killed ${the_IE}"
   sleep 10              # DEBUG - find a better way to confirm
 }
 # END FUNCTIONS
 
 #------------------------------------------------------------------------
 # MAIN
-BMARKrepo_arr=("https://github.com/robert-mcdermott/openai-llm-benchmark" \
-    "https://github.com/vllm-project/guidellm")
 
 # Install necessary Tools
 curl -LsSf https://astral.sh/uv/install.sh | sh>/dev/null
@@ -166,27 +182,26 @@ echo "Done cloning the BENCHMARK Inference Engine repos"
 # Determine which vLLM podman images are available (locally)
 #podman images
 
-# Initialize vars used in 'startIE' and 'runBmark' functions
-testIE_arr=("vllm-gpu" "vllm-cpu-env" "llama.cpp-CPU")
-testURL_arr=("http://localhost:8000" \
-             "http://localhost:8000" \
-             "http://localhost:8080")
-testMODELS_arr=("SmolLM2-135M-Instruct" \
-                "SmolLM2-360M-Instruct" \
-                "SmolLM2-1.7B-Instruct")
-testPROMPT="What is the capital of Washington state in the USA?  /no_think"
+# Create RESULTS dir - timestamped
+mkdir -p "${RESULTS_dir}"
+if [ "$?" != "0" ]; then
+    error_handler "Unable to create Results directory"
+fi
+RESULTS_path=realpath "${RESULTS_dir}"
 
 # Now get to work with TEST Loop
 url_index=0                         # used to pickup correct IE url
 for ie in "${testIE_arr[@]}"; do
     url="${testURL_arr[url_index]}"     # get proper URL for this IE
-    echo "Entering main TEST Loop with $ie and $url"
+    echo; echo "Entering main TEST Loop with $ie and $url"
     for model in "${testMODELS_arr[@]}"; do
-        echo "Entering inner TEST Loop with $ie & $model"
+        echo "> Entering inner TEST Loop with $ie & $model"
         startIE "${ie}" "${url}" "${model}"          # Start the Inference Engine
         runBmark "${ie}" "${url}" "${model}" "${testPROMPT}"  # Run the Benchmark
-        stopIE "${ie}"                                # Stop the Inference Engine
+        stopIE "${ie}"                               # Stop the Inference Engine
+        echo "> Completed inner TEST Loop with $ie & $model"
     done                  # Inner FOR Loop
+    echo "Completed main TEST Loop with $ie & $url"
     ((url_index+=1))      # increment to pickup (next) correct IE url
 done                      # Outer FOR Loop
 
