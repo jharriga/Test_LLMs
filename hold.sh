@@ -29,7 +29,8 @@ verifyIE() {
   # DEBUG - find a better way to confirm
   preaction=$(mark_ms)
   timeout "$wait_sec" bash -c \
-    "until curl -s -H 'Cache-Control: no-cache, no-store' "${the_model_url}">/dev/null; do sleep 1; done"
+    "until curl -s -H 'Cache-Control: no-cache, no-store' --max-time 5 \
+      "${the_model_url}">/dev/null; do sleep 1; done"
   # Trap timeout condition
   if [ $? -eq 124 ]; then
     stopIE "${the_IE}"           # be thorough
