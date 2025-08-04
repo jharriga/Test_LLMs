@@ -41,6 +41,7 @@ cd vllm
 podman build -f "${containerFile}" \
   --build-arg VLLM_CPU_DISABLE_AVX512="true" \
   --tag vllm-cpu-env --target "${targetName}" .
+cd ..
 
 ## OPTIONAL
 ##echo; echo "Build vLLM-GPU using 'podman build'"
@@ -51,12 +52,19 @@ podman build -f "${containerFile}" \
 ##podman build -f docker/Dockerfile \
 ##  --build-arg RUN_WHEEL_CHECK="false" \
 ##  --tag vllm-gpu --target vllm-openai .
+## cd ..
 
 podman images
 
-echo; echo "Build llama.cpp using 'cmake'"
-cd ../llama.cpp
+# Build llama.cpp for two modes: cpu and gpu
+echo; echo "Build llama.cpp-CPU using 'cmake'"
+cd llama.cpp
 cmake -B build
 cmake --build build --config Release -j $(nproc)
+cd ..
 
-
+##echo; echo "Build llama.cpp-GPU using 'cmake'"
+##export PATH="/usr/local/cuda-12.6/bin:$PATH"
+##cd llama.cpp
+##cmake -B build -DGGML_CUDA=ON
+##cmake --build build --config Release -j $(nproc) 
