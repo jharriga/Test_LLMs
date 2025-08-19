@@ -13,6 +13,7 @@ Results from 'run_tests.sh' can be found in timestamped dirs
 located within the ./Results dir  
 
 # run_LATESTpcp.sh 
-under development  
+UNDER DEVELOPMENT  
 A script which utilizes PCPrecord_systemd to create PCP-Archives during LLM test-runs  
 Requires that jharriga/PCPrecord_systemd be installed and configured on the system  
+pulls in 'PCPrecord_systemd/Clients/client.inc' bash functions  
