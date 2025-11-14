@@ -12,8 +12,9 @@ testURL_arr=("http://localhost:8000" \
              "http://localhost:8000" \
              "http://localhost:8080")
 testMODELS_arr=("SmolLM2-135M-Instruct" \
-                "SmolLM2-360M-Instruct" \
-                "SmolLM2-1.7B-Instruct")
+                "SmolLM2-360M-Instruct")
+##                "SmolLM2-360M-Instruct" \
+##                "SmolLM2-1.7B-Instruct")
 testPROMPT="What is the capital of Washington state in the USA?  /no_think"
 RESULTS_path="$PWD/Results/Started_$(date +"%b%d-%Y-%H%M%S")"
 
@@ -37,11 +38,13 @@ error_handler() {
 }
 
 verifyIE() {
+## Need to extend verifyIE() to probe if PID died early
 # Wait for Inference Engine to initialize. Verify by listing available Models
   local the_IE="$1"
   local the_model_url="$2"
   local wait_sec=600                # BIG for TIMEOUT cmd
   local curl_sec=5                  # retry interval for 'curl'
+
   # Poke at IE for list of Models and record time til response
   preaction=$(mark_ms)
   timeout "$wait_sec" bash -c \
@@ -67,7 +70,7 @@ runBmark() {
   local the_url="$2"
   local the_model="$3"
   local the_prompt="$4"
-  local model_url="${the_url}/v1/models"    # used to verify startup
+  local model_url="${the_url}/v1/models"    # used to verify IE startup
   # Create LOGFILE w/results
   #BMARK_res="../Results/${the_IE}_${the_model}_$(date +"%b%d-%Y-%H%M%S")"
   local BMARK_log="${RESULTS_path}/${the_IE}_${the_model}.BMARKlog"
@@ -77,7 +80,7 @@ runBmark() {
     error_handler "Unable to find Bmark directory"
   fi
   # Verify the_IE is actually running
-  verifyIE "${the_IE}" "${model_url}"
+##  verifyIE "${the_IE}" "${model_url}"        # DEBUG
   echo "Run starting - RESULTS file: ${BMARK_log}"
   uv sync > /dev/null 2>&1                # Silence
   # OPTIONAL add '--quiet' to silence the progress-bar
@@ -122,20 +125,31 @@ startIE() {
       -v $PWD/Models:/model \
       "${the_IE}" --model "/model/${the_model}"
   elif [[ $the_IE == "llama.cpp-CPU" ]]; then
-    cd llama.cpp
     # Look into use of '--metrics'. Capture with PCP OpenMetrics?
-    ./build/bin/llama-server -m "../Models/${the_model}.gguf" \
+    ./llama.cpp/build/bin/llama-server -m "$PWD/Models/${the_model}.gguf" \
       --log-file "${IE_log}" >/dev/null 2>&1 &
-    cd ..
+## Need to extend verifyIE() to probe if PID died early
+##    # Record the PID of the IE backgrd process
+##    pid_IE=$!
+##    # Pause, then Verify PID still exists as running backgrd process
+##    sleep 5
+##    if kill -0 "$pid_IE" 2>/dev/null; then
+##      echo "$the_IE is running as $pid_IE."
+##    else
+##      echo "$the_IE is no longer running as $pid_IE. ERROR"
+##      error_handler "verifyIE caught failure starting ${the_IE}."
+##    fi
+
   else
     error_handler "Unrecognized IE ${the_IE}. ABORTING Test"
   fi
-  # check return code
-  if [ "$?" != "0" ]; then
-    error_handler "Unable to start ${the_IE}. Exit status: $?"
-  fi
+  # Check return code. This does not seem to work.
+##  if [ "$?" != "0" ]; then
+##    error_handler "Unable to start ${the_IE}. Exit status: $?"
+##  fi
   
-# Wait for Inference Engine to initialize. Verify by listing available Models
+# Wait for Inference Engine to initialize. 
+# Verify by checking that process is running and then listing available Models
   verifyIE "${the_IE}" "${model_url}"
 }
 
@@ -172,10 +186,13 @@ echo; echo "Clone the BENCHMARK Inference Engine repos"
 for BMARK_repo in "${BMARKrepo_arr[@]}"; do
     BMARK_name="$(basename "$BMARK_repo")"
     BMARK_path="$PWD/$BMARK_name"
+    echo "$BMARK_path"                     # DEBUG
     if [ ! -d "$BMARK_path" ]; then
        echo "Cloning $BMARK_repo"
        git clone "${BMARK_repo}">/dev/null
-       error_handler "Unable to git clone ${BMARK_repo}. Exit status: $?"
+       if [ "$?" != "0" ]; then
+         error_handler "Unable to git clone ${BMARK_repo}. Exit status: $?"
+      fi
     fi
 done
 echo "Done cloning the BENCHMARK Inference Engine repos"
@@ -207,4 +224,5 @@ for ie in "${testIE_arr[@]}"; do
 done                      # Outer FOR Loop
 
 echo "Done with testing"
+
 
