@@ -21,6 +21,7 @@ RESULTS_DIR="RESULTS_${TEST_NAME}_${TIMESTAMP}"
 ## SINGULAR Values
 RATES=("1,1,1" "2,2,2" "8,8,8")         # singular_1_2_8
 #RATES=("8,8,8" "1,1,1" "4,4,4")        # singular_8_1_4
+#RATES=("8" "1" "4")                    # onerun_8_1_4
 ##  MULTI Values
 #RATES=("12,4,8" "12,12,12" "8,4,12")
 ##RATES=("1,8")                  # DEBUG
