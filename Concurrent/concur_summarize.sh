@@ -38,7 +38,8 @@ for SUB_DIR in "$BASE_DIR"/*; do
 
             # 4. Search the new file for "duration" and show 2 lines of context before
             echo "Searching for 'duration' in $PP_JSON:"
-            grep -B 2 '"duration"' "$PP_JSON"
+#            grep -B 2 '"duration"' "$PP_JSON"
+            grep '"duration"' "$PP_JSON"
         else
             echo "No JSON file found in $SUB_DIR"
         fi
