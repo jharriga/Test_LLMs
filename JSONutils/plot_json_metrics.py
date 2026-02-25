@@ -4,7 +4,11 @@ import os
 import matplotlib.pyplot as plt
 from datetime import datetime
 
-"""The JSON Path Grapher with Annotations"""
+"""The JSON Path Grapher with Annotations
+This script generates a plot from JSON data, including annotations for each data point.
+It parses timestamps and metrics from specified JSON paths, handling both Linux Epoch
+and ISO formats.
+"""
 
 def get_nested_value(data, path_list):
     """Recursively follows a list of keys (JSON Path) to find a value."""
