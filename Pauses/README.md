@@ -16,7 +16,7 @@ Created pretty-print file:   ../../GuideLLM_Results/RESULTS_RATES_1_8_<$TIMESTAM
 Searching for 'duration' in   ../../GuideLLM_Results/RESULTS_RATES_1_8_<$TIMESTAMP>/run_1_rate_1/benchmarks_PP_PP.json:  
       "duration": 244.47095155715942,  
 Runtime information:  
-/bin/time RUNTIME in seconds= 249970 ms for CMDSTR to complete  
+RUNTIME = 249970 ms for CMDSTR to complete  
 
 <SNIP>
 ```
