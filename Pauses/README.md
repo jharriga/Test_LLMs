@@ -1,6 +1,6 @@
 Scripts useful in isolating GuideLLM timing comparisons when executing  
 benchmarks using a variety of concurrency rates.  
-Capturing results (GuideLLMM Reports and console msgs) and post-processing timings.  
+Captures results (GuideLLM Reports and console msgs) and post-processing of timings.  
 *NOTE:* Requires a running inference server is available at http://localhost:8000 
 
 # Sample Usage  
