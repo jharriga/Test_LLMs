@@ -18,13 +18,12 @@ TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 RESULTS_DIR="RESULTS_${TEST_NAME}_${TIMESTAMP}"
 
 # 2. Define the rates as an array of strings
+RATES=("1" "8")                         # Isolate PAUSES
+# Other testing types:
 ## SINGULAR Values
-#RATES=("1,1,1" "2,2,2" "8,8,8")         # singular_1_2_8
 #RATES=("8,8,8" "1,1,1" "4,4,4")        # singular_8_1_4
-#RATES=("8" "1" "4")                    # onerun_8_1_4
 ##  MULTI Values
 #RATES=("12,4,8" "12,12,12" "8,4,12")
-RATES=("1,8")                           # Isolate PAUSES
 
 # 3. Define the command to be executed
 #CMDSTR="echo 'Processing rates: \$rate | Attempt: \$run'"
@@ -41,7 +40,6 @@ for rate in "${RATES[@]}"; do
         
         # Format filename (replacing commas with underscores)
         safe_rate=$(echo "$rate" | tr ',' '_')
-##        LOG_FILE="${RESULTS_DIR}/run_${run}_rate_${safe_rate}.log"
         LOG_DIR="${RESULTS_DIR}/run_${run}_rate_${safe_rate}"
         mkdir -p "$LOG_DIR"
         echo "Directory created: $LOG_DIR"
@@ -53,13 +51,12 @@ for rate in "${RATES[@]}"; do
         echo "--> CMDSTR: [$CMDSTR]" | tee -a "$LOG_FILE"
 
         # 7. Execute the command and redirect stdout/stderr
-	pre_cmd=$(mark_ms)
+	    pre_cmd=$(mark_ms)
         eval "$CMDSTR" >> "$LOG_FILE" 2>&1
 	# Measure and report time interval for curl response
         post_cmd=$(mark_ms)
         interval=$(( 10*(post_cmd - pre_cmd) ))
-        echo "RUNTIME= $interval ms for CMDSTR to complete"| tee -a "$LOG_FILE"
-        
+        echo "RUNTIME = $interval ms for CMDSTR to complete"| tee -a "$LOG_FILE"
     done
 done
 
